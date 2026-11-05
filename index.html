@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Pop Culture</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
+      color: #eee;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      margin-bottom: 32px;
+      color: #0ff;
+      text-shadow: 0 0 12px rgba(0,255,255,.4);
+    }
+
+    #card {
+      background: #15151f;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      width: 400px;
+      max-width: 90vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+      transition: transform .3s;
+    }
+
+    #card:hover {
+      transform: translateY(-2px);
+    }
+
+    #image-container {
+      width: 100%;
+      height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d0d14;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    #image-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      transition: opacity .4s;
+    }
+
+    #image-container .placeholder {
+      color: #333;
+      font-size: 3rem;
+    }
+
+    #spinner {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #222;
+      border-top-color: #0ff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      position: absolute;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    #category {
+      font-size: .8rem;
+      color: #0ff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      opacity: .7;
+    }
+
+    #description {
+      font-size: .85rem;
+      color: #888;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      max-height: 4.5em;
+      overflow: hidden;
+    }
+
+    #wiki-link {
+      display: inline-block;
+      font-size: .75rem;
+      color: #555;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color .2s;
+    }
+
+    #wiki-link:hover { color: #0ff; }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: center;
+    }
+
+    button {
+      padding: 12px 32px;
+      background: transparent;
+      color: #0ff;
+      border: 1px solid #0ff;
+      font-family: inherit;
+      font-size: .9rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background .2s, color .2s, box-shadow .2s;
+    }
+
+    button:hover {
+      background: #0ff;
+      color: #0a0a0f;
+      box-shadow: 0 0 20px rgba(0,255,255,.3);
+    }
+
+    button:active {
+      transform: scale(.97);
+    }
+
+    #counter {
+      margin-top: 20px;
+      font-size: .75rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Random Pop Culture</h1>
+
+  <div id="card">
+    <div id="image-container">
+      <div id="spinner"></div>
+      <img id="photo" src="" alt="" style="display:none">
+      <div class="placeholder" id="placeholder">?</div>
+    </div>
+    <div id="category"></div>
+    <div id="name"></div>
+    <div id="description"></div>
+    <a id="wiki-link" href="#" target="_blank" rel="noopener"></a>
+  </div>
+
+  <div class="buttons">
+    <button id="btn">Next</button>
+  </div>
+  <div id="counter"></div>
+
+  <script>
+    const CHARACTERS = [
+      // --- Jeux vidéo ---
+      { name: "Mario", wiki: "Mario_(character)", cat: "Jeux vidéo" },
+      { name: "Luigi", wiki: "Luigi", cat: "Jeux vidéo" },
+      { name: "Princess Peach", wiki: "Princess_Peach", cat: "Jeux vidéo" },
+      { name: "Bowser", wiki: "Bowser_(character)", cat: "Jeux vidéo" },
+      { name: "Yoshi", wiki: "Yoshi", cat: "Jeux vidéo" },
+      { name: "Toad", wiki: "Toad_(Nintendo)", cat: "Jeux vidéo" },
+      { name: "Donkey Kong", wiki: "Donkey_Kong_(character)", cat: "Jeux vidéo" },
+      { name: "Wario", wiki: "Wario", cat: "Jeux vidéo" },
+      { name: "Link", wiki: "Link_(The_Legend_of_Zelda)", cat: "Jeux vidéo" },
+      { name: "Zelda", wiki: "Princess_Zelda", cat: "Jeux vidéo" },
+      { name: "Ganondorf", wiki: "Ganondorf", cat: "Jeux vidéo" },
+      { name: "Samus Aran", wiki: "Samus_Aran", cat: "Jeux vidéo" },
+      { name: "Kirby", wiki: "Kirby_(character)", cat: "Jeux vidéo" },
+      { name: "Pikachu", wiki: "Pikachu", cat: "Jeux vidéo" },
+      { name: "Mewtwo", wiki: "Mewtwo", cat: "Jeux vidéo" },
+      { name: "Charizard", wiki: "Charizard", cat: "Jeux vidéo" },
+      { name: "Eevee", wiki: "Eevee", cat: "Jeux vidéo" },
+      { name: "Pac-Man", wiki: "Pac-Man_(character)", cat: "Jeux vidéo" },
+      { name: "Sonic", wiki: "Sonic_the_Hedgehog_(character)", cat: "Jeux vidéo" },
+      { name: "Tails", wiki: "Tails_(Sonic_the_Hedgehog)", cat: "Jeux vidéo" },
+      { name: "Knuckles", wiki: "Knuckles_the_Echidna", cat: "Jeux vidéo" },
+      { name: "Mega Man", wiki: "Mega_Man_(character)", cat: "Jeux vidéo" },
+      { name: "Lara Croft", wiki: "Lara_Croft", cat: "Jeux vidéo" },
+      { name: "Master Chief", wiki: "Master_Chief_(Halo)", cat: "Jeux vidéo" },
+      { name: "Kratos", wiki: "Kratos_(God_of_War)", cat: "Jeux vidéo" },
+      { name: "Cloud Strife", wiki: "Cloud_Strife", cat: "Jeux vidéo" },
+      { name: "Solid Snake", wiki: "Solid_Snake", cat: "Jeux vidéo" },
+      { name: "Crash Bandicoot", wiki: "Crash_Bandicoot_(character)", cat: "Jeux vidéo" },
+      { name: "Spyro", wiki: "Spyro_(character)", cat: "Jeux vidéo" },
+      { name: "Ratchet & Clank", wiki: "Ratchet_%26_Clank", cat: "Jeux vidéo" },
+      { name: "Geralt de Riv", wiki: "Geralt_of_Rivia", cat: "Jeux vidéo" },
+      { name: "Steve (Minecraft)", wiki: "Minecraft", cat: "Jeux vidéo" },
+      { name: "Creeper", wiki: "Minecraft", cat: "Jeux vidéo" },
+      { name: "GLaDOS", wiki: "GLaDOS", cat: "Jeux vidéo" },
+      { name: "Gordon Freeman", wiki: "Gordon_Freeman", cat: "Jeux vidéo" },
+      { name: "Arthur Morgan", wiki: "Arthur_Morgan_(Red_Dead_Redemption)", cat: "Jeux vidéo" },
+      { name: "Ellie (TLOU)", wiki: "Ellie_(The_Last_of_Us)", cat: "Jeux vidéo" },
+      { name: "Doom Slayer", wiki: "Doomguy", cat: "Jeux vidéo" },
+      { name: "Bayonetta", wiki: "Bayonetta_(character)", cat: "Jeux vidéo" },
+
+      // --- Films & Séries ---
+      { name: "Dark Vador", wiki: "Darth_Vader", cat: "Films" },
+      { name: "Luke Skywalker", wiki: "Luke_Skywalker", cat: "Films" },
+      { name: "Yoda", wiki: "Yoda", cat: "Films" },
+      { name: "Han Solo", wiki: "Han_Solo", cat: "Films" },
+      { name: "Chewbacca", wiki: "Chewbacca", cat: "Films" },
+      { name: "Boba Fett", wiki: "Boba_Fett", cat: "Films" },
+      { name: "Indiana Jones", wiki: "Indiana_Jones_(character)", cat: "Films" },
+      { name: "James Bond", wiki: "James_Bond_(character)", cat: "Films" },
+      { name: "Terminator", wiki: "Terminator_(character)", cat: "Films" },
+      { name: "John Wick", wiki: "John_Wick_(character)", cat: "Films" },
+      { name: "Neo", wiki: "Neo_(The_Matrix)", cat: "Films" },
+      { name: "Gandalf", wiki: "Gandalf", cat: "Films" },
+      { name: "Aragorn", wiki: "Aragorn", cat: "Films" },
+      { name: "Gollum", wiki: "Gollum", cat: "Films" },
+      { name: "Jack Sparrow", wiki: "Jack_Sparrow", cat: "Films" },
+      { name: "Shrek", wiki: "Shrek_(character)", cat: "Films" },
+      { name: "Buzz l'Éclair", wiki: "Buzz_Lightyear", cat: "Films" },
+      { name: "Woody", wiki: "Woody_(Toy_Story)", cat: "Films" },
+      { name: "Nemo", wiki: "Finding_Nemo", cat: "Films" },
+      { name: "Wall-E", wiki: "WALL-E_(character)", cat: "Films" },
+      { name: "Elsa", wiki: "Elsa_(Frozen)", cat: "Films" },
+      { name: "Simba", wiki: "Simba", cat: "Films" },
+      { name: "Stitch", wiki: "Stitch_(Lilo_%26_Stitch)", cat: "Films" },
+      { name: "Totoro", wiki: "My_Neighbor_Totoro", cat: "Films" },
+      { name: "Sans Visage", wiki: "Spirited_Away", cat: "Films" },
+      { name: "E.T.", wiki: "E.T._the_Extra-Terrestrial", cat: "Films" },
+      { name: "Alien (Xenomorph)", wiki: "Alien_(creature_in_Alien_franchise)", cat: "Films" },
+      { name: "Predator", wiki: "Predator_(alien)", cat: "Films" },
+      { name: "Ghostface", wiki: "Ghostface_(Scream)", cat: "Films" },
+      { name: "Freddy Krueger", wiki: "Freddy_Krueger", cat: "Films" },
+      { name: "Joker", wiki: "Joker_(character)", cat: "Films" },
+      { name: "Walter White", wiki: "Walter_White_(Breaking_Bad)", cat: "Séries" },
+      { name: "Daenerys Targaryen", wiki: "Daenerys_Targaryen", cat: "Séries" },
+      { name: "Jon Snow", wiki: "Jon_Snow_(character)", cat: "Séries" },
+      { name: "Tyrion Lannister", wiki: "Tyrion_Lannister", cat: "Séries" },
+      { name: "The Mandalorian", wiki: "The_Mandalorian_(character)", cat: "Séries" },
+      { name: "Eleven", wiki: "Eleven_(Stranger_Things)", cat: "Séries" },
+      { name: "Dexter Morgan", wiki: "Dexter_Morgan", cat: "Séries" },
+      { name: "Homer Simpson", wiki: "Homer_Simpson", cat: "Séries" },
+      { name: "Bart Simpson", wiki: "Bart_Simpson", cat: "Séries" },
+      { name: "Rick Sanchez", wiki: "Rick_Sanchez_(Rick_and_Morty)", cat: "Séries" },
+      { name: "Naruto", wiki: "Naruto_Uzumaki", cat: "Anime" },
+      { name: "Goku", wiki: "Goku", cat: "Anime" },
+      { name: "Vegeta", wiki: "Vegeta", cat: "Anime" },
+      { name: "Luffy", wiki: "Monkey_D._Luffy", cat: "Anime" },
+      { name: "Zoro", wiki: "Roronoa_Zoro", cat: "Anime" },
+      { name: "Eren Jäger", wiki: "Eren_Yeager", cat: "Anime" },
+      { name: "Levi Ackerman", wiki: "List_of_Attack_on_Titan_characters", cat: "Anime" },
+      { name: "Light Yagami", wiki: "Light_Yagami", cat: "Anime" },
+      { name: "Spike Spiegel", wiki: "Spike_Spiegel", cat: "Anime" },
+      { name: "Saitama", wiki: "Saitama_(One-Punch_Man)", cat: "Anime" },
+      { name: "Tanjiro", wiki: "Tanjiro_Kamado", cat: "Anime" },
+      { name: "Guts", wiki: "Guts_(Berserk)", cat: "Anime" },
+      { name: "Edward Elric", wiki: "Edward_Elric", cat: "Anime" },
+      { name: "Sailor Moon", wiki: "Sailor_Moon_(character)", cat: "Anime" },
+      { name: "Astro Boy", wiki: "Astro_Boy_(character)", cat: "Anime" },
+
+      // --- Super-héros ---
+      { name: "Spider-Man", wiki: "Spider-Man", cat: "Super-héros" },
+      { name: "Batman", wiki: "Batman", cat: "Super-héros" },
+      { name: "Superman", wiki: "Superman", cat: "Super-héros" },
+      { name: "Wonder Woman", wiki: "Wonder_Woman", cat: "Super-héros" },
+      { name: "Iron Man", wiki: "Iron_Man", cat: "Super-héros" },
+      { name: "Captain America", wiki: "Captain_America", cat: "Super-héros" },
+      { name: "Thor", wiki: "Thor_(Marvel_Comics)", cat: "Super-héros" },
+      { name: "Hulk", wiki: "Hulk", cat: "Super-héros" },
+      { name: "Black Panther", wiki: "Black_Panther_(Marvel_Comics)", cat: "Super-héros" },
+      { name: "Wolverine", wiki: "Wolverine_(character)", cat: "Super-héros" },
+      { name: "Deadpool", wiki: "Deadpool", cat: "Super-héros" },
+      { name: "Thanos", wiki: "Thanos", cat: "Super-héros" },
+      { name: "Flash", wiki: "Flash_(DC_Comics_character)", cat: "Super-héros" },
+      { name: "Aquaman", wiki: "Aquaman", cat: "Super-héros" },
+      { name: "Green Lantern", wiki: "Green_Lantern", cat: "Super-héros" },
+      { name: "Doctor Strange", wiki: "Doctor_Strange", cat: "Super-héros" },
+      { name: "Venom", wiki: "Venom_(Marvel_Comics_character)", cat: "Super-héros" },
+      { name: "Magneto", wiki: "Magneto_(Marvel_Comics)", cat: "Super-héros" },
+
+      // --- Musique ---
+      { name: "Michael Jackson", wiki: "Michael_Jackson", cat: "Musique" },
+      { name: "Elvis Presley", wiki: "Elvis_Presley", cat: "Musique" },
+      { name: "David Bowie", wiki: "David_Bowie", cat: "Musique" },
+      { name: "Freddie Mercury", wiki: "Freddie_Mercury", cat: "Musique" },
+      { name: "Prince", wiki: "Prince_(musician)", cat: "Musique" },
+      { name: "Madonna", wiki: "Madonna_(entertainer)", cat: "Musique" },
+      { name: "Kurt Cobain", wiki: "Kurt_Cobain", cat: "Musique" },
+      { name: "Tupac Shakur", wiki: "Tupac_Shakur", cat: "Musique" },
+      { name: "Bob Marley", wiki: "Bob_Marley", cat: "Musique" },
+      { name: "Jimi Hendrix", wiki: "Jimi_Hendrix", cat: "Musique" },
+      { name: "John Lennon", wiki: "John_Lennon", cat: "Musique" },
+      { name: "Amy Winehouse", wiki: "Amy_Winehouse", cat: "Musique" },
+
+      // --- Icônes & Memes ---
+      { name: "Doge", wiki: "Doge_(meme)", cat: "Memes" },
+      { name: "Grumpy Cat", wiki: "Grumpy_Cat", cat: "Memes" },
+      { name: "Nyan Cat", wiki: "Nyan_Cat", cat: "Memes" },
+      { name: "Pepe the Frog", wiki: "Pepe_the_Frog", cat: "Memes" },
+      { name: "Rickroll", wiki: "Rickrolling", cat: "Memes" },
+      { name: "Hello Kitty", wiki: "Hello_Kitty", cat: "Icônes" },
+      { name: "Mickey Mouse", wiki: "Mickey_Mouse", cat: "Icônes" },
+      { name: "Bugs Bunny", wiki: "Bugs_Bunny", cat: "Icônes" },
+      { name: "SpongeBob", wiki: "SpongeBob_SquarePants_(character)", cat: "Icônes" },
+      { name: "Scooby-Doo", wiki: "Scooby-Doo_(character)", cat: "Icônes" },
+      { name: "Tom & Jerry", wiki: "Tom_and_Jerry", cat: "Icônes" },
+      { name: "Pinocchio", wiki: "Pinocchio_(Disney_character)", cat: "Icônes" },
+      { name: "Grinch", wiki: "Grinch", cat: "Icônes" },
+      { name: "Charlie Chaplin", wiki: "Charlie_Chaplin", cat: "Icônes" },
+      { name: "Mr. Bean", wiki: "Mr._Bean", cat: "Icônes" },
+      { name: "Bob Ross", wiki: "Bob_Ross", cat: "Icônes" },
+    ];
+
+    const photo = document.getElementById('photo');
+    const placeholder = document.getElementById('placeholder');
+    const spinner = document.getElementById('spinner');
+    const nameEl = document.getElementById('name');
+    const catEl = document.getElementById('category');
+    const descEl = document.getElementById('description');
+    const wikiLink = document.getElementById('wiki-link');
+    const counterEl = document.getElementById('counter');
+
+    let seen = 0;
+
+    async function fetchWiki(wikiTitle) {
+      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return res.json();
+    }
+
+    async function next() {
+      // UI loading state
+      photo.style.display = 'none';
+      placeholder.style.display = 'none';
+      spinner.style.display = 'block';
+      nameEl.textContent = '';
+      catEl.textContent = '';
+      descEl.textContent = '';
+      wikiLink.href = '#';
+      wikiLink.textContent = '';
+
+      const char = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+      seen++;
+
+      try {
+        const data = await fetchWiki(char.wiki);
+
+        if (data && data.thumbnail) {
+          // Use originalimage if available for higher res, otherwise thumbnail
+          const imgUrl = (data.originalimage && data.originalimage.source)
+            ? data.originalimage.source
+            : data.thumbnail.source;
+          photo.src = imgUrl;
+          photo.alt = char.name;
+          photo.onload = () => {
+            spinner.style.display = 'none';
+            photo.style.display = 'block';
+          };
+          photo.onerror = () => {
+            spinner.style.display = 'none';
+            placeholder.textContent = char.name[0];
+            placeholder.style.display = 'block';
+          };
+        } else {
+          spinner.style.display = 'none';
+          placeholder.textContent = char.name[0];
+          placeholder.style.display = 'block';
+        }
+
+        catEl.textContent = char.cat;
+        nameEl.textContent = char.name;
+        descEl.textContent = data && data.extract ? data.extract : '';
+        if (data && data.content_urls) {
+          wikiLink.href = data.content_urls.desktop.page;
+          wikiLink.textContent = 'Wikipedia →';
+        }
+      } catch (e) {
+        spinner.style.display = 'none';
+        placeholder.textContent = '!';
+        placeholder.style.display = 'block';
+        catEl.textContent = char.cat;
+        nameEl.textContent = char.name;
+        descEl.textContent = 'Impossible de charger les données.';
+      }
+
+      counterEl.textContent = `${seen} / ${CHARACTERS.length} personnages`;
+    }
+
+    document.getElementById('btn').addEventListener('click', next);
+    document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); next(); } });
+
+    next();
+  </script>
+</body>
+</html>
